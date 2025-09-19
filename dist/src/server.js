@@ -17,12 +17,21 @@ const prisma = new client_1.PrismaClient();
 // Middlewares
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-// ✅ Routes principales
+// ✅ Montage des routes principales
 app.use("/api/search", search_routes_1.default);
 app.use("/api/courses", courses_routes_1.default);
 app.use("/api/quizzes", quiz_routes_1.default);
 app.use("/api/tiers", tiers_routes_1.default);
-// Health check endpoint
+// ✅ Endpoint racine (health check)
+app.get("/", (req, res) => {
+    res.json({
+        status: "ok",
+        service: "kickstart-backend",
+        environment: process.env.NODE_ENV || "production",
+        uptime: process.uptime(),
+    });
+});
+// ✅ Health check explicite (pour Railway)
 app.get("/healthz", async (_req, res) => {
     try {
         await prisma.$queryRaw `SELECT 1`;
@@ -33,7 +42,7 @@ app.get("/healthz", async (_req, res) => {
         res.status(500).json({ status: "error", database: "unreachable" });
     }
 });
-// Exemple route: pays
+// Exemple route: liste des pays
 app.get("/countries", async (_req, res) => {
     try {
         const countries = await prisma.country.findMany({
@@ -50,7 +59,7 @@ app.get("/countries", async (_req, res) => {
 app.use((req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
-// Graceful shutdown
+// Gestion propre de l'arrêt
 process.on("SIGINT", async () => {
     console.log("\nShutting down server...");
     await prisma.$disconnect();
@@ -59,5 +68,6 @@ process.on("SIGINT", async () => {
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
+    console.log("✅ Routes actives : /api/courses, /api/quizzes, /api/tiers, /api/search");
 });
 //# sourceMappingURL=server.js.map
