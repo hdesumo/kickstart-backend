@@ -18,9 +18,10 @@ model Currency {
 
 model MembershipTier {
   id            Int       @id @default(autoincrement())
-  kind          String    // "student" ou "non_student"
+  kind          String // "student" ou "non_student"
   minMonthlyUsd Float
   currency      String
+  benefits      String? // ✅ Ajouté pour corriger tiers.routes.ts
   isDefault     Boolean   @default(false)
   students      Student[]
 }
@@ -33,18 +34,18 @@ model Country {
 }
 
 model Campus {
-  id          Int           @id @default(autoincrement())
-  name        String
-  countryId   Int
-  country     Country       @relation(fields: [countryId], references: [id])
+  id           Int           @id @default(autoincrement())
+  name         String
+  countryId    Int
+  country      Country       @relation(fields: [countryId], references: [id])
   associations Association[]
 }
 
 model Association {
-  id       Int      @id @default(autoincrement())
+  id       Int       @id @default(autoincrement())
   name     String
   campusId Int
-  campus   Campus   @relation(fields: [campusId], references: [id])
+  campus   Campus    @relation(fields: [campusId], references: [id])
   students Student[]
 }
 
@@ -59,8 +60,43 @@ model Student {
 }
 
 model Partnership {
-  id      Int    @id @default(autoincrement())
+  id      Int     @id @default(autoincrement())
   name    String
   contact String
   website String?
+}
+
+//
+// 📚 Gestion des cours et quiz
+//
+model Course {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ Relation inverse avec Quiz
+  quizzes Quiz[] @relation("CourseQuizzes")
+}
+
+model Quiz {
+  id        Int      @id @default(autoincrement())
+  title     String
+  courseId  Int?
+  course    Course?  @relation(name: "CourseQuizzes", fields: [courseId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions QuizQuestion[]
+}
+
+model QuizQuestion {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String?
+  quizId    Int
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

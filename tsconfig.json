@@ -1,15 +1,37 @@
 {
   "compilerOptions": {
+    /* Emplacement et sortie */
+    "rootDir": ".",                  // prend en compte src/ et prisma/
+    "outDir": "dist",                // tous les fichiers compilés vont dans dist/
+
+    /* Options de compilation */
     "target": "ES2020",
     "module": "commonjs",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "strict": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+
+    /* Helpers et chemins */
+    "sourceMap": true,
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+
+  "include": [
+    "src/**/*.ts",       // code de ton app
+    "prisma/**/*.ts"     // inclut seed.ts et tout fichier prisma TS
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".turbo",
+    ".vercel"
+  ]
 }
