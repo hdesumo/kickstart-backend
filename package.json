@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Express + Prisma + PostgreSQL backend (Railway)",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/src/server.js",
     "prisma:generate": "prisma generate",
@@ -33,11 +33,10 @@
     "@types/node": "^20.11.30",
     "@types/node-fetch": "^2.6.13",
     "eslint": "^8.57.0",
-    "nodemon": "^3.1.0",
+    "nodemon": "^3.1.10",
     "prettier": "^3.3.2",
     "prisma": "^5.18.0",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   },
   "engines": {

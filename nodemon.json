@@ -1,0 +1,13 @@
+{
+  "watch": ["src"],
+  "ext": "ts",
+  "ignore": ["dist/*", "node_modules/*"],
+  "exec": "ts-node --esm src/server.ts",
+  "env": {
+    "PORT": "8081",
+    "NODE_ENV": "development"
+  },
+  "restartable": "rs",
+  "verbose": true,
+  "delay": "1000"
+}
