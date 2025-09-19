@@ -1,35 +1,49 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 
-// Chargement des variables d'environnement (.env)
 dotenv.config();
 
-import tiersRoutes from "./routes/tiers.routes.js";
-import currenciesRoutes from "./routes/currencies.routes.js";
-
 const app = express();
-const PORT = process.env.PORT || 8080;
+const prisma = new PrismaClient();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Endpoint de santé (utile pour Railway)
-app.get("/healthz", (req, res) => {
-  res.status(200).json({ status: "ok", message: "KickStart Campus API is healthy" });
+// Health check endpoint
+app.get("/healthz", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ status: "ok", database: "connected" });
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    res.status(500).json({ status: "error", database: "unreachable" });
+  }
 });
 
-// Routes principales
-app.use("/api/tiers", tiersRoutes);
-app.use("/api/currencies", currenciesRoutes);
-
-// Gestion d'erreur 404
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
+// Example route: get all countries
+app.get("/countries", async (_req, res) => {
+  try {
+    const countries = await prisma.country.findMany({
+      include: { campuses: true },
+    });
+    res.json(countries);
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    res.status(500).json({ error: "Failed to fetch countries" });
+  }
 });
 
-// Lancement du serveur
+// Graceful shutdown
+process.on("SIGINT", async () => {
+  console.log("\nShutting down server...");
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

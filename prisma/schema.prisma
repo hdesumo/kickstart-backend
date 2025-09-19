@@ -1,15 +1,66 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Currency {
+  id        Int     @id @default(autoincrement())
+  code      String  @unique
+  name      String
+  symbol    String
+  isDefault Boolean @default(false)
+}
+
+model MembershipTier {
+  id            Int       @id @default(autoincrement())
+  kind          String    // "student" ou "non_student"
+  minMonthlyUsd Float
+  currency      String
+  isDefault     Boolean   @default(false)
+  students      Student[]
+}
+
+model Country {
+  id       Int      @id @default(autoincrement())
+  name     String
+  code     String   @unique
+  campuses Campus[]
+}
+
+model Campus {
+  id          Int           @id @default(autoincrement())
+  name        String
+  countryId   Int
+  country     Country       @relation(fields: [countryId], references: [id])
+  associations Association[]
+}
+
+model Association {
+  id       Int      @id @default(autoincrement())
+  name     String
+  campusId Int
+  campus   Campus   @relation(fields: [campusId], references: [id])
+  students Student[]
+}
+
+model Student {
+  id            Int            @id @default(autoincrement())
+  fullName      String
+  email         String         @unique
+  associationId Int?
+  association   Association?   @relation(fields: [associationId], references: [id])
+  tierId        Int
+  tier          MembershipTier @relation(fields: [tierId], references: [id])
+}
+
+model Partnership {
+  id      Int    @id @default(autoincrement())
+  name    String
+  contact String
+  website String?
 }
