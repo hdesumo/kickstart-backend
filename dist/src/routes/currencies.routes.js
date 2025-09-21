@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+const router = Router();
 // Exemple de route GET
 router.get("/", async (req, res) => {
     // Plus tard : remplacer par une requête Prisma
@@ -12,5 +10,4 @@ router.get("/", async (req, res) => {
         { code: "NGN", name: "Naira nigérian", symbol: "₦" }
     ]);
 });
-exports.default = router;
-//# sourceMappingURL=currencies.routes.js.map
+export default router;

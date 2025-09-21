@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,83 +10,33 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Currency {
-  id        Int     @id @default(autoincrement())
-  code      String  @unique
-  name      String
-  symbol    String
-  isDefault Boolean @default(false)
-}
+///////////////////////////////////////////////////////////////
+//                        MODELS                             //
+///////////////////////////////////////////////////////////////
 
-model MembershipTier {
-  id            Int       @id @default(autoincrement())
-  kind          String // "student" ou "non_student"
-  minMonthlyUsd Float
-  currency      String
-  benefits      String? // ✅ Ajouté pour corriger tiers.routes.ts
-  isDefault     Boolean   @default(false)
-  students      Student[]
-}
-
-model Country {
-  id       Int      @id @default(autoincrement())
-  name     String
-  code     String   @unique
-  campuses Campus[]
-}
-
-model Campus {
-  id           Int           @id @default(autoincrement())
-  name         String
-  countryId    Int
-  country      Country       @relation(fields: [countryId], references: [id])
-  associations Association[]
-}
-
-model Association {
-  id       Int       @id @default(autoincrement())
-  name     String
-  campusId Int
-  campus   Campus    @relation(fields: [campusId], references: [id])
-  students Student[]
-}
-
-model Student {
-  id            Int            @id @default(autoincrement())
-  fullName      String
-  email         String         @unique
-  associationId Int?
-  association   Association?   @relation(fields: [associationId], references: [id])
-  tierId        Int
-  tier          MembershipTier @relation(fields: [tierId], references: [id])
-}
-
-model Partnership {
-  id      Int     @id @default(autoincrement())
-  name    String
-  contact String
-  website String?
-}
-
-//
-// 📚 Gestion des cours et quiz
-//
+// --- Cours et apprentissage ---
 model Course {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  externalId String?  @unique
+  title      String
+  content    String?
+  url        String?
+  source     String? // ex: "coursera"
+  level      String?
+  campus     String?
+  fileUrl    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  // ✅ Relation inverse avec Quiz
-  quizzes Quiz[] @relation("CourseQuizzes")
+  quizzes Quiz[]
 }
 
+// --- Quizzes liés aux cours ---
 model Quiz {
   id        Int      @id @default(autoincrement())
   title     String
   courseId  Int?
-  course    Course?  @relation(name: "CourseQuizzes", fields: [courseId], references: [id])
+  course    Course?  @relation(fields: [courseId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -94,9 +46,53 @@ model Quiz {
 model QuizQuestion {
   id        Int      @id @default(autoincrement())
   question  String
-  answer    String?
+  answer    String
   quizId    Int
   quiz      Quiz     @relation(fields: [quizId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- Tiers d'abonnement / monétisation ---
+model MembershipTier {
+  id            Int      @id @default(autoincrement())
+  kind          String
+  minMonthlyUsd Int
+  currency      String
+  benefits      String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// --- Notifications système ---
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- Support / Centre d’assistance ---
+model SupportRequest {
+  id Int @id @default(autoincrement())
+
+  // Interne (utilisateur connecté)
+  userId Int?
+  // Pas encore de relation "User" car pas de modèle User défini.
+  // On pourra l'ajouter plus tard : user User? @relation(fields: [userId], references: [id])
+
+  // Public (visiteur)
+  name  String?
+  email String?
+
+  // Détails du ticket
+  subject   String
+  message   String
+  status    String   @default("open")
+  type      String // "internal" ou "public"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

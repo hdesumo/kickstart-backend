@@ -1,94 +1,95 @@
-import { Router, Request, Response } from "express";
-import { prisma } from "../lib/prisma";
+import { Router } from "express";
+import { prisma } from "../lib/prisma.js";
 
 const router = Router();
 
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (req, res) => {
   try {
-    const { search, courseId } = req.query;
+    const { title, courseId } = req.query;
 
-    const total = await prisma.quiz.count({
-      where: {
-        title: search
-          ? { contains: String(search), mode: "insensitive" }
-          : undefined,
-        courseId: courseId ? Number(courseId) : undefined,
-      },
-    });
+    const where: any = {};
+    if (title) where.title = { contains: String(title), mode: "insensitive" };
+    if (courseId) where.courseId = Number(courseId);
 
+    const total = await prisma.quiz.count({ where });
     const quizzes = await prisma.quiz.findMany({
-      where: {
-        title: search
-          ? { contains: String(search), mode: "insensitive" }
-          : undefined,
-        courseId: courseId ? Number(courseId) : undefined,
-      },
-      include: { questions: true },
+      where,
+      include: { questions: true }
     });
 
     res.json({ total, quizzes });
-  } catch (error) {
-    console.error("Erreur GET /quizzes :", error);
-    res.status(500).json({ error: "Impossible de récupérer les quiz." });
+  } catch (err) {
+    console.error("Erreur GET /quizzes:", err);
+    res.status(500).json({ error: "Impossible de récupérer les quizzes." });
   }
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", async (req, res) => {
   try {
-    const { title, courseId } = req.body;
+    const { title, courseId, questions } = req.body;
 
     const quiz = await prisma.quiz.create({
       data: {
         title,
-        courseId: courseId ? Number(courseId) : undefined,
+        courseId: courseId ? Number(courseId) : null,
+        questions: questions
+          ? {
+              create: questions.map((q: any) => ({
+                question: q.question,
+                answer: q.answer
+              }))
+            }
+          : undefined
       },
+      include: { questions: true }
     });
 
     res.status(201).json(quiz);
-  } catch (error) {
-    console.error("Erreur POST /quizzes :", error);
+  } catch (err) {
+    console.error("Erreur POST /quizzes:", err);
     res.status(500).json({ error: "Impossible de créer le quiz." });
   }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, questions } = req.body;
+    const { title, courseId, questions } = req.body;
 
     const updated = await prisma.quiz.update({
       where: { id: Number(id) },
-      data: { title },
+      data: {
+        title,
+        courseId: courseId ? Number(courseId) : null,
+        questions: questions
+          ? {
+              deleteMany: { quizId: Number(id) },
+              create: questions.map((q: any) => ({
+                question: q.question,
+                answer: q.answer
+              }))
+            }
+          : undefined
+      },
+      include: { questions: true }
     });
 
-    if (questions) {
-      await prisma.quizQuestion.deleteMany({ where: { quizId: Number(id) } });
-      await prisma.quizQuestion.createMany({
-        data: questions.map((q: any) => ({
-          question: q.question,
-          answer: q.answer,
-          quizId: Number(id),
-        })),
-      });
-    }
-
     res.json(updated);
-  } catch (error) {
-    console.error("Erreur PUT /quizzes/:id :", error);
+  } catch (err) {
+    console.error("Erreur PUT /quizzes:", err);
     res.status(500).json({ error: "Impossible de mettre à jour le quiz." });
   }
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     await prisma.quizQuestion.deleteMany({ where: { quizId: Number(id) } });
     await prisma.quiz.delete({ where: { id: Number(id) } });
 
-    res.json({ message: "Quiz supprimé avec succès" });
-  } catch (error) {
-    console.error("Erreur DELETE /quizzes/:id :", error);
+    res.status(204).end();
+  } catch (err) {
+    console.error("Erreur DELETE /quizzes:", err);
     res.status(500).json({ error: "Impossible de supprimer le quiz." });
   }
 });

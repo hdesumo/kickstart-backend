@@ -4,77 +4,55 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Début du seeding...");
+  console.log("🌱 Début du seeding des notifications...");
 
-  // 1️⃣ Currencies (upsert pour éviter les doublons)
-  await prisma.currency.upsert({
-    where: { code: "USD" },
-    update: {},
-    create: {
-      code: "USD",
-      name: "US Dollar",
-      symbol: "$",
-      isDefault: true,
-    },
-  });
+  // Efface les anciennes notifications
+  await prisma.notification.deleteMany();
 
-  await prisma.currency.upsert({
-    where: { code: "XOF" },
-    update: {},
-    create: {
-      code: "XOF",
-      name: "Franc CFA BCEAO",
-      symbol: "CFA",
-      isDefault: false,
-    },
-  });
-
-  // 2️⃣ Membership Tiers
-  await prisma.membershipTier.createMany({
+  await prisma.notification.createMany({
     data: [
-      { kind: "student", minMonthlyUsd: 5, currency: "USD", benefits: "Accès aux ressources premium", isDefault: true },
-      { kind: "non_student", minMonthlyUsd: 10, currency: "USD", benefits: "Accès complet + événements", isDefault: false },
+      {
+        title: "Bienvenue sur Kickstart Campus 🚀",
+        message: "Votre compte a été créé avec succès. Explorez les projets disponibles !",
+        read: false,
+      },
+      {
+        title: "Nouveau Quiz Disponible",
+        message: "Un nouveau quiz sur Prisma a été ajouté. Testez vos connaissances !",
+        read: false,
+      },
+      {
+        title: "Défi du mois",
+        message: "Participez au défi d’épargne collectif et gagnez jusqu’à 50 000 FCFA !",
+        read: false,
+      },
+      {
+        title: "Projet financé ✅",
+        message: "Votre projet ‘Startup Green’ a atteint son objectif de financement.",
+        read: true,
+      },
+      {
+        title: "Mise à jour des conditions",
+        message: "Veuillez lire nos nouvelles conditions d’utilisation.",
+        read: false,
+      },
+      {
+        title: "Classement inter-universités",
+        message: "Découvrez où se classe votre université ce mois-ci.",
+        read: true,
+      }
     ],
-    skipDuplicates: true,
   });
 
-  // 3️⃣ Course
-  const course = await prisma.course.upsert({
-    where: { id: 1 }, // id arbitraire pour éviter duplication
-    update: {},
-    create: {
-      title: "Introduction à Prisma",
-      content: "Cours pour apprendre à utiliser Prisma avec Node.js",
-    },
-  });
-
-  // 4️⃣ Quiz lié au cours
-  const quiz = await prisma.quiz.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      title: "Quiz Prisma Basics",
-      courseId: course.id,
-    },
-  });
-
-  // 5️⃣ Questions du quiz
-  await prisma.quizQuestion.createMany({
-    data: [
-      { question: "Qu'est-ce que Prisma ?", answer: "Un ORM pour Node.js", quizId: quiz.id },
-      { question: "Quelle commande génère le client ?", answer: "`npx prisma generate`", quizId: quiz.id },
-    ],
-    skipDuplicates: true,
-  });
-
-  console.log("✅ Seeding terminé avec succès !");
+  console.log("✅ Seeding terminé !");
 }
 
 main()
-  .catch((e) => {
-    console.error("❌ Erreur lors du seeding :", e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error("❌ Erreur lors du seeding:", e);
+    await prisma.$disconnect();
+    process.exit(1);
   });

@@ -1,30 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-// src/routes/search.routes.ts
-const express_1 = require("express");
-const prisma_1 = require("../lib/prisma");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import { prisma } from "../lib/prisma.js";
+const router = Router();
 router.get("/suggestions", async (req, res) => {
     try {
-        // Récupération des données depuis Prisma
-        const courses = await prisma_1.prisma.course.findMany();
-        const quizzes = await prisma_1.prisma.quiz.findMany();
-        const quizQuestions = await prisma_1.prisma.quizQuestion.findMany();
-        // Construction d'une réponse unifiée
+        const [courses, quizzes, quizQuestions] = await Promise.all([
+            prisma.course.findMany(),
+            prisma.quiz.findMany(),
+            prisma.quizQuestion.findMany()
+        ]);
         const suggestions = [
             ...courses.map((c) => ({ type: "course", title: c.title })),
             ...quizzes.map((q) => ({ type: "quiz", title: q.title })),
-            ...quizQuestions.map((qq) => ({
-                type: "question",
-                title: qq.question,
-            })),
+            ...quizQuestions.map((qq) => ({ type: "question", title: qq.question }))
         ];
         res.json({ suggestions });
     }
-    catch (error) {
-        console.error("Erreur dans /suggestions:", error);
-        res.status(500).json({ error: "Erreur lors de la récupération des suggestions." });
+    catch (err) {
+        console.error("Erreur GET /search/suggestions:", err);
+        res.status(500).json({ error: "Impossible de récupérer les suggestions." });
     }
 });
-exports.default = router;
-//# sourceMappingURL=search.routes.js.map
+export default router;
