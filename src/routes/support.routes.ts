@@ -1,61 +1,77 @@
-// backend/src/routes/support.routes.ts
+// src/routes/support.routes.ts
 import { Router } from "express";
 import {
   createSupportRequest,
   getSupportRequests,
   getSupportRequestById,
+  updateSupportRequestStatus,
+  deleteSupportRequest,
 } from "../controllers/supportController.js";
 
 const router = Router();
 
 /**
  * @route POST /api/support
- * @desc Crée une nouvelle demande de support (publique ou interne)
+ * @desc Créer une nouvelle demande de support (publique ou interne)
  */
 router.post("/", async (req, res) => {
   try {
-    const supportRequest = await createSupportRequest(req.body);
-    res.status(201).json(supportRequest);
+    await createSupportRequest(req, res);
   } catch (error) {
-    console.error("❌ Erreur création support:", error);
-    res.status(500).json({ error: "Impossible de créer la demande de support" });
+    console.error("Erreur lors de la création de la demande :", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
   }
 });
 
 /**
  * @route GET /api/support
- * @desc Récupère toutes les demandes de support avec pagination & filtrage
- * Query params : page, limit, type
+ * @desc Récupérer la liste paginée des demandes
  */
 router.get("/", async (req, res) => {
   try {
-    const { page, limit, type } = req.query;
-    const requests = await getSupportRequests({
-      page: Number(page) || 1,
-      limit: Number(limit) || 10,
-      type: type as "public" | "internal" | undefined,
-    });
-    res.json(requests);
+    await getSupportRequests(req, res);
   } catch (error) {
-    console.error("❌ Erreur récupération support:", error);
-    res.status(500).json({ error: "Impossible de récupérer les demandes" });
+    console.error("Erreur lors de la récupération des demandes :", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
   }
 });
 
 /**
  * @route GET /api/support/:id
- * @desc Récupère une demande spécifique
+ * @desc Récupérer le détail d'une demande par ID
  */
 router.get("/:id", async (req, res) => {
   try {
-    const request = await getSupportRequestById(Number(req.params.id));
-    if (!request) {
-      return res.status(404).json({ error: "Demande introuvable" });
-    }
-    res.json(request);
+    await getSupportRequestById(req, res);
   } catch (error) {
-    console.error("❌ Erreur récupération demande support:", error);
-    res.status(500).json({ error: "Impossible de récupérer cette demande" });
+    console.error("Erreur lors de la récupération de la demande :", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
+  }
+});
+
+/**
+ * @route PATCH /api/support/:id/status
+ * @desc Mettre à jour le statut d'une demande (admin/interne)
+ */
+router.patch("/:id/status", async (req, res) => {
+  try {
+    await updateSupportRequestStatus(req, res);
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du statut :", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
+  }
+});
+
+/**
+ * @route DELETE /api/support/:id
+ * @desc Supprimer une demande (si nécessaire, réservé admin)
+ */
+router.delete("/:id", async (req, res) => {
+  try {
+    await deleteSupportRequest(req, res);
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la demande :", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
   }
 });
 

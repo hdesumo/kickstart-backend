@@ -1,113 +1,144 @@
-import { prisma } from "../lib/prisma.js";
-import fs from "fs";
-import path from "path";
+// src/controllers/supportController.ts
 import { Request, Response } from "express";
+import { prisma } from "../lib/prisma.js";
 
-// 📌 Utilitaire pour écrire dans les logs locaux
-function logSupportRequest(entry: object) {
-  const logDir = path.resolve(process.cwd(), "logs");
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true });
-  }
-  const logFile = path.join(logDir, "support.log");
-  const timestamp = new Date().toISOString();
-  fs.appendFileSync(
-    logFile,
-    `[${timestamp}] ${JSON.stringify(entry, null, 2)}\n`
-  );
-}
-
-// ✅ Création d’une demande de support
+/**
+ * Crée une nouvelle demande de support (publique ou interne)
+ */
 export async function createSupportRequest(req: Request, res: Response) {
   try {
     const { type, userId, name, email, subject, message } = req.body;
 
-    if (!type || !subject || !message) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Champs requis manquants" });
+    if (!type || !["public", "internal"].includes(type)) {
+      return res.status(400).json({ error: "Type de demande invalide" });
     }
 
-    const newRequest = await prisma.supportRequest.create({
+    const supportRequest = await prisma.supportRequest.create({
       data: {
         type,
-        userId,
-        name,
-        email,
+        userId: type === "internal" ? userId : null,
+        name: type === "public" ? name : null,
+        email: type === "public" ? email : null,
         subject,
         message,
+        status: "open",
       },
     });
 
-    // 📝 Log local
-    logSupportRequest({ event: "NEW_SUPPORT_REQUEST", payload: newRequest });
-
-    // 📩 Placeholder pour envoyer un email admin (facile à activer plus tard)
-    // await sendAdminNotification(newRequest);
-
-    return res.status(201).json({
-      success: true,
-      message: "Demande enregistrée avec succès",
-      data: newRequest,
+    res.status(201).json({
+      message: "Demande de support créée avec succès",
+      data: supportRequest,
     });
-  } catch (error: any) {
-    console.error("❌ Erreur création support:", error);
-    logSupportRequest({ event: "ERROR", message: error.message });
-    return res.status(500).json({ success: false, message: "Erreur serveur" });
+  } catch (error) {
+    console.error("Erreur dans createSupportRequest:", error);
+    res.status(500).json({ error: "Erreur lors de la création de la demande" });
   }
 }
 
-// ✅ Récupération de toutes les demandes (avec pagination)
+/**
+ * Récupère la liste des demandes de support (paginée)
+ */
 export async function getSupportRequests(req: Request, res: Response) {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const skip = (Number(page) - 1) * Number(limit);
+    const page = parseInt((req.query.page as string) || "1");
+    const limit = parseInt((req.query.limit as string) || "10");
+    const skip = (page - 1) * limit;
 
     const [requests, total] = await Promise.all([
       prisma.supportRequest.findMany({
         skip,
-        take: Number(limit),
+        take: limit,
         orderBy: { createdAt: "desc" },
       }),
       prisma.supportRequest.count(),
     ]);
 
-    return res.json({
-      success: true,
+    res.status(200).json({
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
       data: requests,
-      pagination: {
-        total,
-        page: Number(page),
-        limit: Number(limit),
-        pages: Math.ceil(total / Number(limit)),
-      },
     });
-  } catch (error: any) {
-    console.error("❌ Erreur récupération support:", error);
-    logSupportRequest({ event: "ERROR", message: error.message });
-    return res.status(500).json({ success: false, message: "Erreur serveur" });
+  } catch (error) {
+    console.error("Erreur dans getSupportRequests:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération des demandes" });
   }
 }
 
-// ✅ Récupération d’une demande par ID
+/**
+ * Récupère une demande spécifique par ID
+ */
 export async function getSupportRequestById(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
 
     const request = await prisma.supportRequest.findUnique({
-      where: { id: Number(id) },
+      where: { id },
     });
 
     if (!request) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Demande introuvable" });
+      return res.status(404).json({ error: "Demande non trouvée" });
     }
 
-    return res.json({ success: true, data: request });
-  } catch (error: any) {
-    console.error("❌ Erreur récupération support ID:", error);
-    logSupportRequest({ event: "ERROR", message: error.message });
-    return res.status(500).json({ success: false, message: "Erreur serveur" });
+    res.status(200).json(request);
+  } catch (error) {
+    console.error("Erreur dans getSupportRequestById:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération de la demande" });
+  }
+}
+
+/**
+ * Met à jour le statut d'une demande (admin)
+ */
+export async function updateSupportRequestStatus(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+
+    if (!status || !["open", "in_progress", "resolved", "closed"].includes(status)) {
+      return res.status(400).json({ error: "Statut invalide" });
+    }
+
+    const updated = await prisma.supportRequest.update({
+      where: { id },
+      data: { status },
+    });
+
+    res.status(200).json({
+      message: "Statut mis à jour avec succès",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Erreur dans updateSupportRequestStatus:", error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du statut" });
+  }
+}
+
+/**
+ * Supprime une demande de support (admin)
+ */
+export async function deleteSupportRequest(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+
+    await prisma.supportRequest.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erreur dans deleteSupportRequest:", error);
+    res.status(500).json({ error: "Erreur lors de la suppression de la demande" });
   }
 }
