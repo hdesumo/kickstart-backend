@@ -6,7 +6,7 @@ import {
   getSupportRequestById,
   updateSupportRequestStatus,
   deleteSupportRequest,
-} from "../controllers/supportController.js";
+} from "../controllers/supportController"; // ✅ sans .js
 
 const router = Router();
 

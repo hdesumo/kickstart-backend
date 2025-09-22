@@ -1,16 +1,18 @@
-import { Router } from "express";
-import { prisma } from "../lib/prisma.js"; // ✅ ESM obligatoire
+import { Router, Request, Response } from "express";
+import { prisma } from "../lib/prisma";
 
 const router = Router();
 
-// Récupérer tous les tiers (membership tiers)
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const tiers = await prisma.membershipTier.findMany();
-    res.json({ total: tiers.length, tiers });
-  } catch (err) {
-    console.error("Erreur GET /tiers:", err);
-    res.status(500).json({ error: "Impossible de récupérer les niveaux." });
+    const tiers = await prisma.membershipTier.findMany({
+      orderBy: { minMonthlyUsd: "asc" } // ✅ tri logique
+    });
+
+    res.json(tiers);
+  } catch (error) {
+    console.error("Erreur GET /tiers:", error);
+    res.status(500).json({ error: "Impossible de récupérer les tiers d'abonnement." });
   }
 });
 

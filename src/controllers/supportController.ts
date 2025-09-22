@@ -1,6 +1,7 @@
 // src/controllers/supportController.ts
 import { Request, Response } from "express";
-import { prisma } from "../lib/prisma.js";
+// ✅ Correction de l'import : suppression de l'extension .js
+import { prisma } from "../lib/prisma";
 
 /**
  * Crée une nouvelle demande de support (publique ou interne)

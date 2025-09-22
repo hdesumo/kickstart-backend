@@ -1,23 +1,14 @@
-import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-const router = Router();
-router.get("/suggestions", async (req, res) => {
-    try {
-        const [courses, quizzes, quizQuestions] = await Promise.all([
-            prisma.course.findMany(),
-            prisma.quiz.findMany(),
-            prisma.quizQuestion.findMany()
-        ]);
-        const suggestions = [
-            ...courses.map((c) => ({ type: "course", title: c.title })),
-            ...quizzes.map((q) => ({ type: "quiz", title: q.title })),
-            ...quizQuestions.map((qq) => ({ type: "question", title: qq.question }))
-        ];
-        res.json({ suggestions });
-    }
-    catch (err) {
-        console.error("Erreur GET /search/suggestions:", err);
-        res.status(500).json({ error: "Impossible de récupérer les suggestions." });
-    }
-});
-export default router;
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const searchController_1 = require("../controllers/searchController");
+const router = express_1.default.Router();
+// Recherche globale
+router.get("/", searchController_1.searchController.search);
+// Suggestions de recherche
+router.get("/suggestions", searchController_1.searchController.getSuggestions);
+exports.default = router;
+//# sourceMappingURL=search.routes.js.map

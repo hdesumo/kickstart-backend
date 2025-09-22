@@ -1,37 +1,36 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import courseRoutes from "./routes/courses.routes.js";
-import quizRoutes from "./routes/quiz.routes.js";
-import searchRoutes from "./routes/search.routes.js";
-import tierRoutes from "./routes/tiers.routes.js";
-import notificationRoutes from "./routes/notifications.routes.js";
-import supportRoutes from "./routes/support.routes.js";
-import aiRoutes from "./routes/ai.routes.js";
-dotenv.config();
-const app = express();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const courses_routes_1 = __importDefault(require("./routes/courses.routes"));
+const quiz_routes_1 = __importDefault(require("./routes/quiz.routes"));
+const search_routes_1 = __importDefault(require("./routes/search.routes"));
+const tiers_routes_1 = __importDefault(require("./routes/tiers.routes"));
+const notifications_routes_1 = __importDefault(require("./routes/notifications.routes"));
+const support_routes_1 = __importDefault(require("./routes/support.routes"));
+dotenv_1.default.config();
+const app = (0, express_1.default)();
+// Middleware
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+// --- Routes ---
+app.use("/api/courses", courses_routes_1.default);
+app.use("/api/quizzes", quiz_routes_1.default);
+app.use("/api/search", search_routes_1.default);
+app.use("/api/tiers", tiers_routes_1.default);
+app.use("/api/notifications", notifications_routes_1.default);
+app.use("/api/support", support_routes_1.default);
+// --- Health check ---
+app.get("/ping", (_req, res) => {
+    res.send("pong");
+});
+// --- Démarrage du serveur ---
 const PORT = process.env.PORT || 8080;
-app.use(cors());
-app.use(express.json());
-app.get("/", (req, res) => {
-    res.json({
-        status: "ok",
-        service: "kickstart-backend",
-        environment: process.env.NODE_ENV || "production",
-        uptime: process.uptime(),
-    });
-});
-// Routes API
-app.use("/api/courses", courseRoutes);
-app.use("/api/quizzes", quizRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/api/tiers", tierRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/support", supportRoutes);
-app.use("/api/ai", aiRoutes);
-app.use((req, res) => {
-    res.status(404).json({ error: "Route not found" });
-});
 app.listen(PORT, () => {
     console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
 });
+//# sourceMappingURL=server.js.map

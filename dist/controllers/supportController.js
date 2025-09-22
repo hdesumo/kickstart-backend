@@ -1,14 +1,22 @@
-import { prisma } from "../lib/prisma.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createSupportRequest = createSupportRequest;
+exports.getSupportRequests = getSupportRequests;
+exports.getSupportRequestById = getSupportRequestById;
+exports.updateSupportRequestStatus = updateSupportRequestStatus;
+exports.deleteSupportRequest = deleteSupportRequest;
+// ✅ Correction de l'import : suppression de l'extension .js
+const prisma_1 = require("../lib/prisma");
 /**
  * Crée une nouvelle demande de support (publique ou interne)
  */
-export async function createSupportRequest(req, res) {
+async function createSupportRequest(req, res) {
     try {
         const { type, userId, name, email, subject, message } = req.body;
         if (!type || !["public", "internal"].includes(type)) {
             return res.status(400).json({ error: "Type de demande invalide" });
         }
-        const supportRequest = await prisma.supportRequest.create({
+        const supportRequest = await prisma_1.prisma.supportRequest.create({
             data: {
                 type,
                 userId: type === "internal" ? userId : null,
@@ -32,18 +40,18 @@ export async function createSupportRequest(req, res) {
 /**
  * Récupère la liste des demandes de support (paginée)
  */
-export async function getSupportRequests(req, res) {
+async function getSupportRequests(req, res) {
     try {
         const page = parseInt(req.query.page || "1");
         const limit = parseInt(req.query.limit || "10");
         const skip = (page - 1) * limit;
         const [requests, total] = await Promise.all([
-            prisma.supportRequest.findMany({
+            prisma_1.prisma.supportRequest.findMany({
                 skip,
                 take: limit,
                 orderBy: { createdAt: "desc" },
             }),
-            prisma.supportRequest.count(),
+            prisma_1.prisma.supportRequest.count(),
         ]);
         res.status(200).json({
             page,
@@ -61,13 +69,13 @@ export async function getSupportRequests(req, res) {
 /**
  * Récupère une demande spécifique par ID
  */
-export async function getSupportRequestById(req, res) {
+async function getSupportRequestById(req, res) {
     try {
         const id = Number(req.params.id);
         if (isNaN(id)) {
             return res.status(400).json({ error: "ID invalide" });
         }
-        const request = await prisma.supportRequest.findUnique({
+        const request = await prisma_1.prisma.supportRequest.findUnique({
             where: { id },
         });
         if (!request) {
@@ -83,7 +91,7 @@ export async function getSupportRequestById(req, res) {
 /**
  * Met à jour le statut d'une demande (admin)
  */
-export async function updateSupportRequestStatus(req, res) {
+async function updateSupportRequestStatus(req, res) {
     try {
         const id = Number(req.params.id);
         const { status } = req.body;
@@ -93,7 +101,7 @@ export async function updateSupportRequestStatus(req, res) {
         if (!status || !["open", "in_progress", "resolved", "closed"].includes(status)) {
             return res.status(400).json({ error: "Statut invalide" });
         }
-        const updated = await prisma.supportRequest.update({
+        const updated = await prisma_1.prisma.supportRequest.update({
             where: { id },
             data: { status },
         });
@@ -110,13 +118,13 @@ export async function updateSupportRequestStatus(req, res) {
 /**
  * Supprime une demande de support (admin)
  */
-export async function deleteSupportRequest(req, res) {
+async function deleteSupportRequest(req, res) {
     try {
         const id = Number(req.params.id);
         if (isNaN(id)) {
             return res.status(400).json({ error: "ID invalide" });
         }
-        await prisma.supportRequest.delete({
+        await prisma_1.prisma.supportRequest.delete({
             where: { id },
         });
         res.status(204).send();
@@ -126,3 +134,4 @@ export async function deleteSupportRequest(req, res) {
         res.status(500).json({ error: "Erreur lors de la suppression de la demande" });
     }
 }
+//# sourceMappingURL=supportController.js.map

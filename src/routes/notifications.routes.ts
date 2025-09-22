@@ -1,16 +1,19 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
+// ✅ Correction de l'import : suppression de l'extension .js
+import { prisma } from "../lib/prisma";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
   try {
     const notifications = await prisma.notification.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" }
     });
-    res.json({ total: notifications.length, notifications });
-  } catch (err) {
-    res.status(500).json({ error: "Erreur récupération notifications" });
+
+    res.json(notifications);
+  } catch (error) {
+    console.error("Erreur GET /notifications:", error);
+    res.status(500).json({ error: "Impossible de récupérer les notifications." });
   }
 });
 

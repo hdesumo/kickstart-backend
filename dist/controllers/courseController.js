@@ -1,21 +1,16 @@
-import { prisma } from "../lib/prisma.js";
-export async function syncCoursesFromExternal(data) {
-    if (!data?.elements)
-        return;
-    for (const c of data.elements) {
-        await prisma.course.upsert({
-            where: { externalId: `coursera_${c.id}` },
-            update: {
-                title: c.name,
-                content: c.description,
-                url: c.slug ?? "",
-            },
-            create: {
-                externalId: `coursera_${c.id}`,
-                title: c.name,
-                content: c.description,
-                url: c.slug ?? "",
-            },
-        });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getCourses = void 0;
+const prisma_1 = require("../lib/prisma");
+const getCourses = async (req, res) => {
+    try {
+        const courses = await prisma_1.prisma.course.findMany();
+        res.json(courses);
     }
-}
+    catch (error) {
+        console.error("Erreur getCourses:", error);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+};
+exports.getCourses = getCourses;
+//# sourceMappingURL=courseController.js.map

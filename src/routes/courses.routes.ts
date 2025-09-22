@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
+// ✅ Correction de l'import : suppression de l'extension .js
+import { prisma } from "../lib/prisma";
 
 const router = Router();
 

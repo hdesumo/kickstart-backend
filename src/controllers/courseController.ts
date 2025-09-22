@@ -1,21 +1,12 @@
-import { prisma } from "../lib/prisma.js";
+import { Request, Response } from "express";
+import { prisma } from "../lib/prisma";
 
-export async function syncCoursesFromExternal(data: any) {
-  if (!data?.elements) return;
-  for (const c of data.elements) {
-    await prisma.course.upsert({
-      where: { externalId: `coursera_${c.id}` },
-      update: {
-        title: c.name,
-        content: c.description,
-        url: c.slug ?? "",
-      },
-      create: {
-        externalId: `coursera_${c.id}`,
-        title: c.name,
-        content: c.description,
-        url: c.slug ?? "",
-      },
-    });
+export const getCourses = async (req: Request, res: Response) => {
+  try {
+    const courses = await prisma.course.findMany();
+    res.json(courses);
+  } catch (error) {
+    console.error("Erreur getCourses:", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
-}
+};

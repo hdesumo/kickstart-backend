@@ -1,14 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 // src/routes/support.routes.ts
-import { Router } from "express";
-import { createSupportRequest, getSupportRequests, getSupportRequestById, updateSupportRequestStatus, deleteSupportRequest, } from "../controllers/supportController.js";
-const router = Router();
+const express_1 = require("express");
+const supportController_1 = require("../controllers/supportController"); // ✅ sans .js
+const router = (0, express_1.Router)();
 /**
  * @route POST /api/support
  * @desc Créer une nouvelle demande de support (publique ou interne)
  */
 router.post("/", async (req, res) => {
     try {
-        await createSupportRequest(req, res);
+        await (0, supportController_1.createSupportRequest)(req, res);
     }
     catch (error) {
         console.error("Erreur lors de la création de la demande :", error);
@@ -21,7 +23,7 @@ router.post("/", async (req, res) => {
  */
 router.get("/", async (req, res) => {
     try {
-        await getSupportRequests(req, res);
+        await (0, supportController_1.getSupportRequests)(req, res);
     }
     catch (error) {
         console.error("Erreur lors de la récupération des demandes :", error);
@@ -34,7 +36,7 @@ router.get("/", async (req, res) => {
  */
 router.get("/:id", async (req, res) => {
     try {
-        await getSupportRequestById(req, res);
+        await (0, supportController_1.getSupportRequestById)(req, res);
     }
     catch (error) {
         console.error("Erreur lors de la récupération de la demande :", error);
@@ -47,7 +49,7 @@ router.get("/:id", async (req, res) => {
  */
 router.patch("/:id/status", async (req, res) => {
     try {
-        await updateSupportRequestStatus(req, res);
+        await (0, supportController_1.updateSupportRequestStatus)(req, res);
     }
     catch (error) {
         console.error("Erreur lors de la mise à jour du statut :", error);
@@ -60,11 +62,12 @@ router.patch("/:id/status", async (req, res) => {
  */
 router.delete("/:id", async (req, res) => {
     try {
-        await deleteSupportRequest(req, res);
+        await (0, supportController_1.deleteSupportRequest)(req, res);
     }
     catch (error) {
         console.error("Erreur lors de la suppression de la demande :", error);
         res.status(500).json({ error: "Erreur interne du serveur" });
     }
 });
-export default router;
+exports.default = router;
+//# sourceMappingURL=support.routes.js.map

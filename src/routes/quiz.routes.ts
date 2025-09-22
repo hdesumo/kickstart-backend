@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
+// ✅ Correction : suppression de l'extension .js dans l'import
+import { prisma } from "../lib/prisma";
 
 const router = Router();
 
+// 📌 Récupérer tous les quizzes
 router.get("/", async (req, res) => {
   try {
     const { title, courseId } = req.query;
@@ -24,6 +26,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+// 📌 Créer un nouveau quiz
 router.post("/", async (req, res) => {
   try {
     const { title, courseId, questions } = req.body;
@@ -51,6 +54,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// 📌 Mettre à jour un quiz existant
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -81,6 +85,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// 📌 Supprimer un quiz
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;

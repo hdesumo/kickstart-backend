@@ -1,6 +1,9 @@
-import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-const router = Router();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+// ✅ Correction de l'import : suppression de l'extension .js
+const prisma_1 = require("../lib/prisma");
+const router = (0, express_1.Router)();
 // 📌 Récupérer tous les cours
 router.get("/", async (req, res) => {
     try {
@@ -10,8 +13,8 @@ router.get("/", async (req, res) => {
             where.level = String(level);
         if (campus)
             where.campus = String(campus);
-        const total = await prisma.course.count({ where });
-        const courses = await prisma.course.findMany({ where });
+        const total = await prisma_1.prisma.course.count({ where });
+        const courses = await prisma_1.prisma.course.findMany({ where });
         res.json({ total, courses });
     }
     catch (err) {
@@ -23,7 +26,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const { title, content, level, campus, fileUrl } = req.body;
-        const course = await prisma.course.create({
+        const course = await prisma_1.prisma.course.create({
             data: { title, content, level, campus, fileUrl }
         });
         res.status(201).json(course);
@@ -38,7 +41,7 @@ router.put("/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const { title, content, level, campus, fileUrl } = req.body;
-        const updated = await prisma.course.update({
+        const updated = await prisma_1.prisma.course.update({
             where: { id: Number(id) }, // ✅ conversion en number
             data: { title, content, level, campus, fileUrl }
         });
@@ -53,7 +56,7 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.course.delete({
+        await prisma_1.prisma.course.delete({
             where: { id: Number(id) } // ✅ conversion en number
         });
         res.status(204).end();
@@ -63,4 +66,5 @@ router.delete("/:id", async (req, res) => {
         res.status(500).json({ error: "Impossible de supprimer le cours." });
     }
 });
-export default router;
+exports.default = router;
+//# sourceMappingURL=courses.routes.js.map
